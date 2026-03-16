@@ -5,7 +5,7 @@
  */
 
 import TemplateManager from "./templateManager.js";
-import { consoleError, escapeHTML, localizeNumber, numberToEncoded, serverTPtoDisplayTP } from "./utils.js";
+import { consoleError, escapeHTML, localizeNumber, numberToEncoded } from "./utils.js";
 
 export default class ApiManager {
 
@@ -106,13 +106,12 @@ export default class ApiManager {
           }
           
           this.coordsTilePixel = [...coordsTile, ...coordsPixel]; // Combines the two arrays such that [x, y, x, y]
-          const displayTP = serverTPtoDisplayTP(coordsTile, coordsPixel);
           
-          const spanElements = document.querySelectorAll('span'); // Retrieves all span elements
+          const buttonElements = document.querySelectorAll('button'); // Retrieves all button elements
 
-          // For every span element, find the one we want (pixel numbers when canvas clicked)
-          for (const element of spanElements) {
-            if (element.textContent.trim().includes(`${displayTP[0]}, ${displayTP[1]}`)) {
+          // For every button element, find the one we want (paint button)
+          for (const element of buttonElements) {
+            if (element.textContent.trim().includes('Paint')) {
 
               let displayCoords = document.querySelector('#bm-display-coords'); // Find the additional pixel coords span
 
@@ -124,7 +123,7 @@ export default class ApiManager {
                 displayCoords.id = 'bm-display-coords';
                 displayCoords.textContent = text;
                 displayCoords.style = 'margin-left: calc(var(--spacing)*3); font-size: small;';
-                element.parentNode.parentNode.insertAdjacentElement('afterend', displayCoords);
+                element.parentNode.insertAdjacentElement('beforebegin', displayCoords);
               } else {
                 displayCoords.textContent = text;
               }
