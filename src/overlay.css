@@ -92,7 +92,9 @@
 }
 
 /* Header 1 when inside dragbar */
-.bm-dragbar h1 {
+/* Or, when the custom class is used */
+.bm-dragbar h1,
+.bm-dragbar-text {
   font-size: 1.2em;
   user-select: none;
   overflow: hidden;
@@ -345,8 +347,10 @@ input[type="file"] {
 
 /* Containers for "sections" of elements in windowed mode */
 /* Does not apply to the main window */
-.bm-container:not(#bm-window-main .bm-container) {
-  margin: 0.25em 0;
+.bm-windowed .bm-container:not(#bm-window-main .bm-container) {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+  /* Do not use 'margin' shorthand, as it will override left/right margin */
 }
 
 /* Header 1 in windowed mode */

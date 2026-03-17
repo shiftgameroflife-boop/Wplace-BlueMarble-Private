@@ -124,7 +124,7 @@ export default class WindowFilter extends Overlay {
               .addSpan({'id': 'bm-filter-tot-completed', 'innerHTML': '??? ???'}).buildElement()
             .buildElement()
             .addDiv({'class': 'bm-container'})
-              .addP({'innerHTML': `Colors with the icon ${this.eyeOpen.replace('<svg', '<svg aria-label="Eye Open"')} will be shown on the canvas. Colors with the icon ${this.eyeClosed.replace('<svg', '<svg aria-label="Eye Closed"')} will not be shown on the canvas. The "Hide All Colors" and "Show All Colors" buttons only apply to colors that display in the list below. The amount of correct pixels is dependent on how many tiles of the template you have loaded since you last opened Wplace.live. If all tiles have been loaded, then the "correct pixel" count is accurate.`}).buildElement()
+              .addP({'innerHTML': `Press the 🗗 button to make this window smaller. Colors with the icon ${this.eyeOpen.replace('<svg', '<svg aria-label="Eye Open"')} will be shown on the canvas. Colors with the icon ${this.eyeClosed.replace('<svg', '<svg aria-label="Eye Closed"')} will not be shown on the canvas. The "Hide All Colors" and "Show All Colors" buttons only apply to colors that display in the list below. The amount of correct pixels is dependent on how many tiles of the template you have loaded since you last opened Wplace.live. If all tiles have been loaded, then the "correct pixel" count is accurate.`}).buildElement()
             .buildElement()
             .addHr().buildElement()
             .addForm({'class': 'bm-container'})
@@ -210,10 +210,19 @@ export default class WindowFilter extends Overlay {
     this.window = this.addDiv({'id': this.windowID, 'class': 'bm-window bm-windowed'})
       .addDragbar()
         .addButton({'class': 'bm-button-circle', 'textContent': '▼', 'aria-label': 'Minimize window "Color Filter"', 'data-button-status': 'expanded'}, (instance, button) => {
-          button.onclick = () => instance.handleMinimization(button);
+          button.onclick = () => {
+            const windowedColorTotals = document.querySelector('#bm-filter-windowed-color-totals');
+            if (windowedColorTotals) {
+              windowedColorTotals.style.display = (button.dataset['buttonStatus'] == 'expanded') ? 'none' : '';
+            }
+            instance.handleMinimization(button);
+          };
           button.ontouchend = () => {button.click()}; // Needed only to negate weird interaction with dragbar
         }).buildElement()
-        .addDiv().buildElement() // Contains the minimized h1 element
+        .addDiv()
+          .addSpan({'id': 'bm-filter-windowed-color-totals', 'class': 'bm-dragbar-text', 'style': 'font-weight: 700;'}).buildElement() // Contains correct / total pixel values
+          // Minimized h1 element will appear here
+        .buildElement() 
         .addDiv({'class': 'bm-flex-center'})
           .addButton({'class': 'bm-button-circle', 'textContent': '🗖', 'aria-label': 'Switch to fullscreen mode for "Color Filter"'}, (instance, button) => {
             button.onclick = () => {
@@ -423,7 +432,7 @@ export default class WindowFilter extends Overlay {
               .addSmall({'textContent': `#${color.id.toString().padStart(2, 0)}`}).buildElement()
               .addSmall({'class': 'bm-filter-color-pxl-cnt', 'textContent': `${colorCorrectLocalized} / ${colorTotalLocalized}`}).buildElement()
             .buildElement()
-            .addP({'class': 'bm-filter-color-pxl-desc', 'textContent': `${((typeof colorIncorrect == 'number') && !isNaN(colorIncorrect)) ? colorIncorrect : '???'} incorrect pixels. Completed: ${colorPercent}`}).buildElement()
+            .addP({'class': 'bm-filter-color-pxl-desc', 'textContent': `${((typeof colorIncorrect == 'number') && !isNaN(colorIncorrect)) ? colorIncorrect : '???'} incorrect pixel${(colorIncorrect == 1) ? '' : 's'}. Completed: ${colorPercent}`}).buildElement()
           .buildElement()
         .buildElement();
       }
@@ -513,18 +522,21 @@ export default class WindowFilter extends Overlay {
     }
   }
 
+  /** The information about a specific color on the palette.
+   * @typedef {Object} ColorData
+   * @property {number | string} colorTotal
+   * @property {string} colorTotalLocalized
+   * @property {number | string} colorCorrect
+   * @property {string} colorCorrectLocalized
+   * @property {string} colorPercent
+   * @property {number} colorIncorrect
+   */
+
   /** Updates the information inside the colors in the color list.
    * If the color list does not exist yet, it returns the color information instead.
    * This assumes the information inside each element is the same between fullscreen and windowed mode.
    * @since 0.90.60
-   * @returns {Object<number, {
-   *   colorTotal: number | string,
-   *   colorTotalLocalized: string,
-   *   colorCorrect: number | string,
-   *   colorCorrectLocalized: string,
-   *   colorPercent: string,
-   *   colorIncorrect: number
-   * }}
+   * @returns {Object.<number, ColorData>}
    */
   updateColorList() {
 
@@ -577,6 +589,22 @@ export default class WindowFilter extends Overlay {
       }
     }
 
+    // Obtains the correct / total pixels display element, or `undefined` if in fullscreen mode
+    const windowedColorTotals = document.querySelector('#bm-filter-windowed-color-totals');
+
+    // If the element exists...
+    if (windowedColorTotals) {
+
+      // Returns the number, unlocalized (no space to localize)
+      // OR returns the three characters on either end of the string, with the middle replaced with an ellipse.
+      // E.g. '1234567' or '123…678'
+      const allCorrect = (this.allPixelsCorrectTotal.toString().length > 7) ? this.allPixelsCorrectTotal.toString().slice(0, 2) + '…' + this.allPixelsCorrectTotal.toString().slice(-3) : this.allPixelsCorrectTotal.toString();
+      const allTotal = (this.allPixelsTotal.toString().length > 7) ? this.allPixelsTotal.toString().slice(0, 2) + '…' + this.allPixelsTotal.toString().slice(-3) : this.allPixelsTotal.toString();
+
+      // Updates the display with XSS protection enabled (because why not)
+      this.updateInnerHTML('#bm-filter-windowed-color-totals', `${allCorrect}/${allTotal}`, true);
+    }
+
     // Return early if the color list does not exist.
     // We can't update DOM elements that don't exist, so we exit now.
     if (!colorList) {return colorStatistics;}
@@ -610,7 +638,7 @@ export default class WindowFilter extends Overlay {
 
       // Updates the pixel description if it exists
       const pixelDesc = document.querySelector(`#${this.windowID} .bm-filter-color[data-id="${colorID}"] .bm-filter-color-pxl-desc`);
-      if (pixelDesc) {pixelDesc.textContent = `${((typeof colorIncorrect == 'number') && !isNaN(colorIncorrect)) ? colorIncorrect : '???'} incorrect pixels. Completed: ${colorPercent}`;}
+      if (pixelDesc) {pixelDesc.textContent = `${((typeof colorIncorrect == 'number') && !isNaN(colorIncorrect)) ? colorIncorrect : '???'} incorrect pixel${(colorIncorrect == 1) ? '' : 's'}. Completed: ${colorPercent}`;}
     }
 
     // Since the dataset has changed, we need to sort again

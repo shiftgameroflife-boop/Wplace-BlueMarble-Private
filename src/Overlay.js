@@ -37,6 +37,9 @@ export default class Overlay {
 
     /** The API manager instance. Later populated when setApiManager is called @type {ApiManager} */
     this.apiManager = null;
+
+    /** The Settings Manager instance. Later populated when setSettingsManager is called @type {SettingsManager} */
+    this.settingsManager = null;
     
     this.outputStatusId = 'bm-output-status'; // ID for status element
 
@@ -50,6 +53,12 @@ export default class Overlay {
    * @since 0.41.4
    */
   setApiManager(apiManager) {this.apiManager = apiManager;}
+
+  /** Populates the settingsManager variable with the settingsManager class.
+   * @param {SettingsManager} settingsManager - The settingsManager class instance
+   * @since 0.91.11
+   */
+  setSettingsManager(settingsManager) {this.settingsManager = settingsManager;}
 
   /** Creates an element.
    * For **internal use** of the {@link Overlay} class.
@@ -109,10 +118,7 @@ export default class Overlay {
         ).join('')
       ] = value;
     } else if (property.startsWith('aria')) {
-      const camelCase = property.slice(5).split('-').map(
-        (part, i) => (i == 0) ? part : part[0].toUpperCase() + part.slice(1)
-      ).join('');
-      element['aria' + camelCase[0].toUpperCase() + camelCase.slice(1)] = value;
+      element.setAttribute(property, value); // We can't do the solution for 'data', as 'aria-labelledby' would fail to apply
     } else {
       element[property] = value;
     }
@@ -511,8 +517,24 @@ export default class Overlay {
 
     const properties = {'type': 'checkbox'}; // Shared checkbox DOM properties
 
-    const label = this.#createElement('label', {'textContent': additionalProperties['textContent'] ?? ''}); // Creates the label element
-    delete additionalProperties['textContent']; // Deletes 'textContent' DOM property before adding the properties to the checkbox
+    // Stores the label content from the additional property
+    const labelContent = {};
+
+    // If the label content was passed in as 'textContent'...
+    if (!!additionalProperties['textContent']) {
+
+      // Store the information, then delete it from additionalProperties
+      labelContent['textContent'] = additionalProperties['textContent'];
+      delete additionalProperties['textContent']; // Deletes 'textContent' DOM property before adding the properties to the checkbox
+    } else if (!!additionalProperties['innerHTML']) {
+      // Else if the label content was passed in as 'innerHTML'...
+
+      // Store the information, then delete it from additionalProperties
+      labelContent['innerHTML'] = additionalProperties['innerHTML'];
+      delete additionalProperties['textContent'];
+    }
+
+    const label = this.#createElement('label', labelContent); // Creates the label element
     const checkbox = this.#createElement('input', properties, additionalProperties); // Creates the checkbox element
     label.insertBefore(checkbox, label.firstChild); // Makes the checkbox the first child of the label (before the text content)
     this.buildElement(); // Signifies that we are done adding children to the checkbox
