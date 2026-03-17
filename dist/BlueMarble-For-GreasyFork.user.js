@@ -2,14 +2,14 @@
 // @name            Blue Marble
 // @name:en         Blue Marble
 // @namespace       https://github.com/SwingTheVine/
-// @version         0.91.0
+// @version         0.91.4
 // @description     A userscript to enhance the user experience on Wplace.live. This includes, but is not limited to: uploading images to display locally on a canvas, adding a button to move the Wplace color palette menu, and other QoL features.
 // @description:en  A userscript to enhance the user experience on Wplace.live. This includes, but is not limited to: uploading images to display locally on a canvas, adding a button to move the Wplace color palette menu, and other QoL features.
 // @author          SwingTheVine
 // @license         MPL-2.0
 // @supportURL      https://discord.gg/tpeBPy46hf
 // @homepageURL     https://bluemarble.lol/
-// @icon            https://raw.githubusercontent.com/SwingTheVine/Wplace-BlueMarble/ffa17bc9a7c2db10efc201437dbf1637e11a6f61/dist/assets/Favicon.png
+// @icon            https://raw.githubusercontent.com/SwingTheVine/Wplace-BlueMarble/78477321232b29c09e3794c360068d7d23a0172c/dist/assets/Favicon.png
 // @updateURL       https://raw.githubusercontent.com/SwingTheVine/Wplace-BlueMarble/main/dist/BlueMarble-For-GreasyFork.user.js
 // @downloadURL     https://raw.githubusercontent.com/SwingTheVine/Wplace-BlueMarble/main/dist/BlueMarble-For-GreasyFork.user.js
 // @match           https://wplace.live/*
@@ -21,7 +21,7 @@
 // @grant           GM_xmlhttpRequest
 // @grant           GM.download
 // @connect         telemetry.thebluecorner.net
-// @resource        CSS-BM-File https://raw.githubusercontent.com/SwingTheVine/Wplace-BlueMarble/ffa17bc9a7c2db10efc201437dbf1637e11a6f61/dist/BlueMarble-For-GreasyFork.user.css
+// @resource        CSS-BM-File https://raw.githubusercontent.com/SwingTheVine/Wplace-BlueMarble/78477321232b29c09e3794c360068d7d23a0172c/dist/BlueMarble-For-GreasyFork.user.css
 // @antifeature     tracking Anonymous opt-in telemetry data
 // @noframes
 // ==/UserScript==
@@ -2506,7 +2506,8 @@ Did you try clicking the canvas first?`);
             const displayTP = serverTPtoDisplayTP(coordsTile, coordsPixel);
             const spanElements = document.querySelectorAll("span");
             for (const element of spanElements) {
-              if (element.textContent.trim().includes(`${displayTP[0]}, ${displayTP[1]}`)) {
+              const elementTextTrimmed = element.textContent.trim();
+              if (elementTextTrimmed.includes(displayTP[0]) && elementTextTrimmed.includes(displayTP[1])) {
                 let displayCoords = document.querySelector("#bm-display-coords");
                 const text = `(Tl X: ${coordsTile[0]}, Tl Y: ${coordsTile[1]}, Px X: ${coordsPixel[0]}, Px Y: ${coordsPixel[1]})`;
                 if (!displayCoords) {
@@ -2514,7 +2515,7 @@ Did you try clicking the canvas first?`);
                   displayCoords.id = "bm-display-coords";
                   displayCoords.textContent = text;
                   displayCoords.style = "margin-left: calc(var(--spacing)*3); font-size: small;";
-                  element.parentNode.parentNode.insertAdjacentElement("afterend", displayCoords);
+                  element.parentNode.parentNode.parentNode.insertAdjacentElement("afterend", displayCoords);
                 } else {
                   displayCoords.textContent = text;
                 }
